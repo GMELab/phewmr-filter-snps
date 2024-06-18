@@ -6,7 +6,7 @@ use std::{
 use clap::Parser;
 use log::debug;
 
-#[derive(Parser)]
+#[derive(Clone, Debug, Parser)]
 #[command(version)]
 pub struct Cli {
     #[arg(long)]
@@ -39,6 +39,10 @@ fn main() {
     let _ = env_logger::Builder::from_env(env_logger::Env::default().filter_or("RUST_LOG", "warn"))
         .try_init();
 
+    let cli = Cli::parse();
+    debug!("{:?}", cli);
+    debug!("--outcome={} --eth_outcome={} --outcome_source={} --sumstat_file={} --output_file={} --list_snps_exposures={} --outcome_panel={} --outcome_assay={} --outcome_gene={} --sample_size_outcome={} --n_case_outcome={} --n_control_outcome={}", cli.outcome, cli.eth_outcome, cli.outcome_source, cli.sumstat_file, cli.output_file, cli.list_snps_exposures, cli.outcome_panel, cli.outcome_assay, cli.outcome_gene, cli.sample_size_outcome, cli.n_case_outcome, cli.n_control_outcome);
+
     let Cli {
         mut outcome,
         eth_outcome,
@@ -52,7 +56,7 @@ fn main() {
         sample_size_outcome,
         n_case_outcome,
         n_control_outcome,
-    } = Cli::parse();
+    } = cli.clone();
 
     debug!("Sumstat file: {}", sumstat_file);
     debug!("Output file: {}", output_file);

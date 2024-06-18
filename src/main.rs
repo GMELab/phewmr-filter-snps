@@ -4,7 +4,7 @@ use std::{
 };
 
 use clap::Parser;
-use log::info;
+use log::debug;
 
 #[derive(Parser)]
 #[command(version)]
@@ -54,32 +54,35 @@ fn main() {
         n_control_outcome,
     } = Cli::parse();
 
-    info!("Sumstat file: {}", sumstat_file);
-    info!("Output file: {}", output_file);
+    debug!("Sumstat file: {}", sumstat_file);
+    debug!("Output file: {}", output_file);
 
     let mut col_num_out = HashMap::new();
+    debug!("Reading sumstat file");
     let file = std::fs::File::open(sumstat_file).unwrap();
     let reader = flate2::bufread::GzDecoder::new(std::io::BufReader::new(file));
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')
         .has_headers(true)
         .from_reader(reader);
+    debug!("Reading headers");
     let headers_rec = rdr.headers().unwrap();
     let headers = headers_rec
         .into_iter()
         .map(|x| x.to_string())
         .collect::<Vec<_>>();
-    // drop(headers_rec);
+    debug!("Headers: {:?}", headers);
     for (i, header) in headers.into_iter().enumerate() {
         col_num_out.insert(header, i);
     }
 
+    debug!("Reading list of snps");
     let snps_exposures = std::fs::read_to_string(list_snps_exposures).unwrap();
     let lines = snps_exposures
         .lines()
         .map(|x| x.split('\t'))
         .collect::<Vec<_>>();
-
+    debug!("Parsing list of snps");
     let mut snps_exposures: HashSet<(&str, &str, &str, &str)> = HashSet::new();
     for mut line in lines {
         let chr = line.next().unwrap();
@@ -90,8 +93,7 @@ fn main() {
         snps_exposures.insert((chr, pos, alt, ref_));
     }
 
-    let mut formatted_rows = HashSet::new();
-
+    debug!("Getting columns");
     let ref_i = col_num_out.get("ref").unwrap();
     let alt_i = col_num_out.get("alt").unwrap();
     let effect_size = if outcome_source == "PURE_BM" {
@@ -152,6 +154,8 @@ fn main() {
         (&0, &0, &0)
     };
 
+    debug!("Iterating over records");
+    let mut formatted_rows = HashSet::new();
     for i in rdr.records() {
         let record = i.unwrap();
         let chr = record.get(*chr_i).unwrap();
@@ -184,6 +188,7 @@ fn main() {
         }
     }
 
+    debug!("Writing output file");
     let mut file = std::fs::File::create(output_file).unwrap();
     for row in formatted_rows {
         writeln!(file, "{}", row).unwrap();

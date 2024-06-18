@@ -4,6 +4,7 @@ use std::{
 };
 
 use clap::Parser;
+use log::info;
 
 #[derive(Parser)]
 #[command(version)]
@@ -52,6 +53,9 @@ fn main() {
         n_case_outcome,
         n_control_outcome,
     } = Cli::parse();
+
+    info!("Sumstat file: {}", sumstat_file);
+    info!("Output file: {}", output_file);
 
     let mut col_num_out = HashMap::new();
     let file = std::fs::File::open(sumstat_file).unwrap();

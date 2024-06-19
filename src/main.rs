@@ -64,9 +64,9 @@ fn main() {
     let mut col_num_out = HashMap::new();
     debug!("Reading sumstat file");
     let file = std::fs::File::open(sumstat_file).unwrap();
-    let reader = flate2::bufread::GzDecoder::new(std::io::BufReader::new(file));
+    let mut reader = flate2::bufread::GzDecoder::new(std::io::BufReader::new(file));
     let mut data = String::new();
-    reader.read_to_string(&mut data);
+    reader.read_to_string(&mut data).unwrap();
     let data = data
         .lines()
         .map(|x| x.split('\t').collect::<Vec<_>>())
@@ -76,10 +76,8 @@ fn main() {
     //     .has_headers(true)
     //     .from_reader(reader);
     debug!("Reading headers");
-    let headers = data[0];
-    debug!("Headers: {:?}", headers);
-    for (i, header) in headers.into_iter().enumerate() {
-        col_num_out.insert(header, i);
+    for (i, header) in data[0].iter().enumerate() {
+        col_num_out.insert(*header, i);
     }
 
     debug!("Reading list of snps");

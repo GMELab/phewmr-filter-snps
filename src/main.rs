@@ -1,6 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
-    io::{Read, Write},
+    io::Write,
 };
 
 use clap::Parser;
@@ -64,20 +64,20 @@ fn main() {
     let mut col_num_out = HashMap::new();
     debug!("Reading sumstat file");
     let file = std::fs::File::open(sumstat_file).unwrap();
-    let mut reader = flate2::bufread::GzDecoder::new(std::io::BufReader::new(file));
-    let mut data = String::new();
-    reader.read_to_string(&mut data).unwrap();
-    let data = data
-        .lines()
-        .map(|x| x.split('\t').collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-    // let mut rdr = csv::ReaderBuilder::new()
-    //     .delimiter(b'\t')
-    //     .has_headers(true)
-    //     .from_reader(reader);
+    let reader = flate2::bufread::GzDecoder::new(std::io::BufReader::new(file));
+    let mut rdr = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .from_reader(reader);
     debug!("Reading headers");
-    for (i, header) in data[0].iter().enumerate() {
-        col_num_out.insert(*header, i);
+    let headers_rec = rdr.headers().unwrap();
+    let headers = headers_rec
+        .into_iter()
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>();
+    debug!("Headers: {:?}", headers);
+    for (i, header) in headers.into_iter().enumerate() {
+        col_num_out.insert(header, i);
     }
 
     debug!("Reading list of snps");
@@ -160,32 +160,24 @@ fn main() {
 
     debug!("Iterating over records");
     let mut formatted_rows = HashSet::new();
-    for record in data.iter().skip(1) {
-        // let chr = record.get(*chr_i).unwrap();
-        // let pos = record.get(*pos_i).unwrap();
-        // let ref_ = record.get(*ref_i).unwrap();
-        // let alt = record.get(*alt_i).unwrap();
-        let chr = record[*chr_i];
-        let pos = record[*pos_i];
-        let ref_ = record[*ref_i];
-        let alt = record[*alt_i];
+    for i in rdr.records() {
+        let record = i.unwrap();
+        let chr = record.get(*chr_i).unwrap();
+        let pos = record.get(*pos_i).unwrap();
+        let ref_ = record.get(*ref_i).unwrap();
+        let alt = record.get(*alt_i).unwrap();
         if snps_exposures.contains(&(chr, pos, ref_, alt)) {
-            // let effect_size = record.get(*effect_size).unwrap();
-            let effect_size = record[*effect_size];
+            let effect_size = record.get(*effect_size).unwrap();
             if ref_.len() + alt.len() == 2 && effect_size != "0" {
-                // let se = record.get(*se_i).unwrap();
-                // let af = record.get(*af_i).unwrap();
-                // let pvalue = record.get(*pvalue_i).unwrap();
-                let se = record[*se_i];
-                let af = record[*af_i];
-                let pvalue = record[*pvalue_i];
+                let se = record.get(*se_i).unwrap();
+                let af = record.get(*af_i).unwrap();
+                let pvalue = record.get(*pvalue_i).unwrap();
                 let (n_total, n_case, n_ctrl) = if n == N::Na {
-                    (record[*n_total], record[*n_case], record[*n_ctrl])
-                    // (
-                    //     record.get(*n_total).unwrap(),
-                    //     record.get(*n_case).unwrap(),
-                    //     record.get(*n_ctrl).unwrap(),
-                    // )
+                    (
+                        record.get(*n_total).unwrap(),
+                        record.get(*n_case).unwrap(),
+                        record.get(*n_ctrl).unwrap(),
+                    )
                 } else if n == N::SampleSizeOutcome {
                     (
                         sample_size_outcome.as_str(),

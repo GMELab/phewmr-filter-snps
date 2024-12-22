@@ -10,29 +10,29 @@ use log::debug;
 #[command(version)]
 pub struct Cli {
     #[arg(long)]
-    outcome: String,
+    outcome:             String,
     #[arg(long)]
-    eth_outcome: String,
+    eth_outcome:         String,
     #[arg(long)]
-    outcome_source: String,
+    outcome_source:      String,
     #[arg(long)]
-    sumstat_file: String,
+    sumstat_file:        String,
     #[arg(long)]
-    output_file: String,
+    output_file:         String,
     #[arg(long)]
     list_snps_exposures: String,
     #[arg(long)]
-    outcome_panel: String,
+    outcome_panel:       String,
     #[arg(long)]
-    outcome_assay: String,
+    outcome_assay:       String,
     #[arg(long)]
-    outcome_gene: String,
+    outcome_gene:        String,
     #[arg(long)]
     sample_size_outcome: String,
     #[arg(long)]
-    n_case_outcome: String,
+    n_case_outcome:      String,
     #[arg(long)]
-    n_control_outcome: String,
+    n_control_outcome:   String,
 }
 
 fn main() {
@@ -41,7 +41,23 @@ fn main() {
 
     let cli = Cli::parse();
     debug!("{:?}", cli);
-    debug!("--outcome={} --eth_outcome={} --outcome_source={} --sumstat_file={} --output_file={} --list_snps_exposures={} --outcome_panel={} --outcome_assay={} --outcome_gene={} --sample_size_outcome={} --n_case_outcome={} --n_control_outcome={}", cli.outcome, cli.eth_outcome, cli.outcome_source, cli.sumstat_file, cli.output_file, cli.list_snps_exposures, cli.outcome_panel, cli.outcome_assay, cli.outcome_gene, cli.sample_size_outcome, cli.n_case_outcome, cli.n_control_outcome);
+    debug!(
+        "--outcome={} --eth_outcome={} --outcome_source={} --sumstat_file={} --output_file={} \
+         --list_snps_exposures={} --outcome_panel={} --outcome_assay={} --outcome_gene={} \
+         --sample_size_outcome={} --n_case_outcome={} --n_control_outcome={}",
+        cli.outcome,
+        cli.eth_outcome,
+        cli.outcome_source,
+        cli.sumstat_file,
+        cli.output_file,
+        cli.list_snps_exposures,
+        cli.outcome_panel,
+        cli.outcome_assay,
+        cli.outcome_gene,
+        cli.sample_size_outcome,
+        cli.n_case_outcome,
+        cli.n_control_outcome
+    );
 
     let Cli {
         mut outcome,
@@ -187,7 +203,10 @@ fn main() {
                 } else {
                     (sample_size_outcome.as_str(), "NA", "NA")
                 };
-                formatted_rows.insert(format!("{outcome}\t{chr}_{pos}_{ref_}_{alt}\t{chr}\t{pos}\t{effect_size}\t{se}\t{alt}\t{ref_}\t{af}\t{pvalue}\tNA\tNA\t{n_total}\t{n_case}\t{n_ctrl}"));
+                formatted_rows.insert(format!(
+                    "{outcome}\t{chr}_{pos}_{ref_}_{alt}\t{chr}\t{pos}\t{effect_size}\t{se}\\
+                     t{alt}\t{ref_}\t{af}\t{pvalue}\tNA\tNA\t{n_total}\t{n_case}\t{n_ctrl}"
+                ));
             }
         }
     }
